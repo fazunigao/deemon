@@ -1,49 +1,108 @@
-local healthBarEnabled = false
+local Settings = {
+    Tracer_Thickness = 2,
+    Outline_Color = Color3.new(1, 1, 1) -- Color blanco para el contorno
+}
 
-L_19_:NewToggle(
-    "HealthBar",
-    "Health Bar.",
-    function(state)
-        healthBarEnabled = state
-        if healthBarEnabled then
-            game:GetService("RunService").RenderStepped:Connect(function()
-                for _, player in pairs(game.Players:GetPlayers()) do
-                    if player ~= game.Players.LocalPlayer and player.Character and player.Character:FindFirstChild("Humanoid") then
-                        local humanoid = player.Character.Humanoid
-                        local health = humanoid.Health
-                        local maxHealth = humanoid.MaxHealth
-                        local healthPercent = health / maxHealth
+local player = game:GetService("Players").LocalPlayer
+local camera = game:GetService("Workspace").CurrentCamera
 
-                        local color = Color3.fromRGB(255 * (1 - healthPercent), 255 * healthPercent, 0)
+local function NewLine(thickness, color)
+    local line = Drawing.new("Line")
+    line.Visible = false
+    line.From = Vector2.new(0, 0)
+    line.To = Vector2.new(0, 0)
+    line.Color = color 
+    line.Thickness = thickness
+    line.Transparency = 1
+    return line
+end
 
-                        for _, part in pairs(player.Character:GetChildren()) do
-                            if part:IsA("BasePart") then
-                                local adornment = Instance.new("BoxHandleAdornment")
-                                adornment.Adornee = part
-                                adornment.AlwaysOnTop = true
-                                adornment.ZIndex = 10
-                                adornment.Size = part.Size + Vector3.new(0.1, 0.1, 0.1)
-                                adornment.Transparency = 0.5
-                                adornment.Color3 = color
-                                adornment.Parent = game.CoreGui
+local function Visibility(state, lib)
+    for _, x in pairs(lib) do
+        x.Visible = state
+    end
+end
 
-                                local selectionBox = Instance.new("SelectionBox")
-                                selectionBox.Adornee = part
-                                selectionBox.LineThickness = 0.05
-                                selectionBox.SurfaceTransparency = 0.5
-                                selectionBox.Color3 = color
-                                selectionBox.Parent = game.CoreGui
-                            end
-                        end
-                    end
-                end
-            end)
-        else
-            for _, v in pairs(game.CoreGui:GetChildren()) do
-                if v:IsA("BoxHandleAdornment") or v:IsA("SelectionBox") then
-                    v:Destroy()
-                end
-            end
+local function ESP(plr)
+    local library = {
+        top = NewLine(Settings.Tracer_Thickness, Settings.Outline_Color),
+        bottom = NewLine(Settings.Tracer_Thickness, Settings.Outline_Color),
+        left = NewLine(Settings.Tracer_Thickness, Settings.Outline_Color),
+        right = NewLine(Settings.Tracer_Thickness, Settings.Outline_Color)
+    }
+
+    local function UpdateColor(healthRatio)
+        local color = Color3.fromRGB(255, 0, 0):lerp(Color3.fromRGB(0, 255, 0), healthRatio)
+        for _, line in pairs(library) do
+            line.Color = color
         end
     end
-)
+
+    local function Updater()
+        local connection
+        connection = game:GetService("RunService").RenderStepped:Connect(function()
+            if plr.Character and plr.Character:FindFirstChild("Humanoid") and plr.Character:FindFirstChild("HumanoidRootPart") then
+                local humanoid = plr.Character.Humanoid
+                local HumPos, OnScreen = camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
+                if OnScreen then
+                    local healthRatio = humanoid.Health / humanoid.MaxHealth
+                    UpdateColor(healthRatio)
+
+                    -- Calcular la silueta alrededor del jugador usando partes de su cuerpo
+                    local head = plr.Character:FindFirstChild("Head")
+                    local torso = plr.Character:FindFirstChild("UpperTorso") or plr.Character:FindFirstChild("Torso")
+                    local leftLeg = plr.Character:FindFirstChild("LeftLeg") or plr.Character:FindFirstChild("LeftLowerLeg")
+                    local rightLeg = plr.Character:FindFirstChild("RightLeg") or plr.Character:FindFirstChild("RightLowerLeg")
+
+                    if head and torso and leftLeg and rightLeg then
+                        -- Obtener posiciones en pantalla para las partes del cuerpo
+                        local headPos = camera:WorldToViewportPoint(head.Position)
+                        local torsoPos = camera:WorldToViewportPoint(torso.Position)
+                        local leftLegPos = camera:WorldToViewportPoint(leftLeg.Position)
+                        local rightLegPos = camera:WorldToViewportPoint(rightLeg.Position)
+
+                        -- Calcular posiciones para el borde de la silueta
+                        local minX = math.min(headPos.X, torsoPos.X, leftLegPos.X, rightLegPos.X) - 10
+                        local maxX = math.max(headPos.X, torsoPos.X, leftLegPos.X, rightLegPos.X) + 10
+                        local minY = math.min(headPos.Y, torsoPos.Y) - 20
+                        local maxY = math.max(torsoPos.Y, leftLegPos.Y, rightLegPos.Y) + 20
+
+                        library.top.From = Vector2.new(minX, minY)
+                        library.top.To = Vector2.new(maxX, minY)
+
+                        library.bottom.From = Vector2.new(minX, maxY)
+                        library.bottom.To = Vector2.new(maxX, maxY)
+
+                        library.left.From = Vector2.new(minX, minY)
+                        library.left.To = Vector2.new(minX, maxY)
+
+                        library.right.From = Vector2.new(maxX, minY)
+                        library.right.To = Vector2.new(maxX, maxY)
+
+                        Visibility(true, library)
+                    end
+                else
+                    Visibility(false, library)
+                end
+            else
+                Visibility(false, library)
+                if not game.Players:FindFirstChild(plr.Name) then
+                    connection:Disconnect()
+                end
+            end
+        end)
+    end
+    coroutine.wrap(Updater)()
+end
+
+for _, v in pairs(game:GetService("Players"):GetPlayers()) do
+    if v.Name ~= player.Name then
+        coroutine.wrap(ESP)(v)
+    end
+end
+
+game.Players.PlayerAdded:Connect(function(newplr)
+    if newplr.Name ~= player.Name then
+        coroutine.wrap(ESP)(newplr)
+    end
+end)
