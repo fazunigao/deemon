@@ -1,6 +1,5 @@
 local Settings = {
     Tracer_Thickness = 2,
-    Outline_Color = Color3.new(1, 1, 1) -- Color blanco para el contorno
 }
 
 local player = game:GetService("Players").LocalPlayer
@@ -25,14 +24,15 @@ end
 
 local function ESP(plr)
     local library = {
-        top = NewLine(Settings.Tracer_Thickness, Settings.Outline_Color),
-        bottom = NewLine(Settings.Tracer_Thickness, Settings.Outline_Color),
-        left = NewLine(Settings.Tracer_Thickness, Settings.Outline_Color),
-        right = NewLine(Settings.Tracer_Thickness, Settings.Outline_Color)
+        top = NewLine(Settings.Tracer_Thickness, Color3.new(1, 1, 1)),
+        bottom = NewLine(Settings.Tracer_Thickness, Color3.new(1, 1, 1)),
+        left = NewLine(Settings.Tracer_Thickness, Color3.new(1, 1, 1)),
+        right = NewLine(Settings.Tracer_Thickness, Color3.new(1, 1, 1))
     }
 
+    -- Función que cambia el color en base al nivel de vida
     local function UpdateColor(healthRatio)
-        local color = Color3.fromRGB(255, 0, 0):lerp(Color3.fromRGB(0, 255, 0), healthRatio)
+        local color = Color3.fromRGB(255, 0, 0):Lerp(Color3.fromRGB(0, 255, 0), healthRatio)
         for _, line in pairs(library) do
             line.Color = color
         end
@@ -48,7 +48,7 @@ local function ESP(plr)
                     local healthRatio = humanoid.Health / humanoid.MaxHealth
                     UpdateColor(healthRatio)
 
-                    -- Calcular la silueta alrededor del jugador usando partes de su cuerpo
+                    -- Calcular la silueta alrededor del jugador usando partes del cuerpo
                     local head = plr.Character:FindFirstChild("Head")
                     local torso = plr.Character:FindFirstChild("UpperTorso") or plr.Character:FindFirstChild("Torso")
                     local leftLeg = plr.Character:FindFirstChild("LeftLeg") or plr.Character:FindFirstChild("LeftLowerLeg")
@@ -62,11 +62,12 @@ local function ESP(plr)
                         local rightLegPos = camera:WorldToViewportPoint(rightLeg.Position)
 
                         -- Calcular posiciones para el borde de la silueta
-                        local minX = math.min(headPos.X, torsoPos.X, leftLegPos.X, rightLegPos.X) - 10
-                        local maxX = math.max(headPos.X, torsoPos.X, leftLegPos.X, rightLegPos.X) + 10
-                        local minY = math.min(headPos.Y, torsoPos.Y) - 20
-                        local maxY = math.max(torsoPos.Y, leftLegPos.Y, rightLegPos.Y) + 20
+                        local minX = math.min(headPos.X, torsoPos.X, leftLegPos.X, rightLegPos.X) - 8
+                        local maxX = math.max(headPos.X, torsoPos.X, leftLegPos.X, rightLegPos.X) + 8
+                        local minY = math.min(headPos.Y, torsoPos.Y) - 10
+                        local maxY = math.max(torsoPos.Y, leftLegPos.Y, rightLegPos.Y) + 10
 
+                        -- Ajustar líneas para una silueta alrededor del personaje
                         library.top.From = Vector2.new(minX, minY)
                         library.top.To = Vector2.new(maxX, minY)
 
