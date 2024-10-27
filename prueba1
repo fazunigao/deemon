@@ -1,90 +1,59 @@
-local Settings = {
-    healthbar = true,  -- Opción para mostrar color según la vida
-    ContourColor = Color3.fromRGB(255, 255, 255), -- Color del contorno (blanco)
-    ContourThickness = 2 -- Grosor del contorno
-}
+local leftLegPos = camera:WorldToViewportPoint(leftLeg.Position)
+local rightLegPos = camera:WorldToViewportPoint(rightLeg.Position)
 
-local player = game:GetService("Players").LocalPlayer
+                        -- Ajustar líneas solo para el contorno de la silueta
+                        library.top.From = Vector2.new(headPos.X, headPos.Y - 8)
+                        library.top.To = Vector2.new(torsoPos.X, torsoPos.Y - 10)
+                        -- Ajustar líneas solo para el contorno de la silueta, alineado correctamente
+                        local width = 15  -- Ancho del contorno
+                        local heightOffset = 10 -- Offset para evitar líneas extrañas
 
--- Función para obtener el color basado en la vida del jugador
-local function UpdateColor(healthRatio)
-    return Color3.fromRGB(255, 0, 0):Lerp(Color3.fromRGB(0, 255, 0), healthRatio)
+                        library.bottom.From = Vector2.new(leftLegPos.X, leftLegPos.Y)
+                        library.bottom.To = Vector2.new(rightLegPos.X, rightLegPos.Y)
+                        -- Línea superior desde la cabeza
+                        library.top.From = Vector2.new(headPos.X - width, headPos.Y - heightOffset)
+                        library.top.To = Vector2.new(headPos.X + width, headPos.Y - heightOffset)
+
+                        library.left.From = Vector2.new(leftLegPos.X, leftLegPos.Y)
+                        library.left.To = Vector2.new(headPos.X, headPos.Y)
+                        -- Línea inferior de las piernas
+                        library.bottom.From = Vector2.new(leftLegPos.X - width, leftLegPos.Y + heightOffset)
+                        library.bottom.To = Vector2.new(rightLegPos.X + width, rightLegPos.Y + heightOffset)
+
+                        library.right.From = Vector2.new(rightLegPos.X, rightLegPos.Y)
+                        library.right.To = Vector2.new(torsoPos.X, torsoPos.Y - 10)
+                        -- Línea izquierda desde la cabeza hasta la pierna izquierda
+                        library.left.From = Vector2.new(headPos.X - width, headPos.Y - heightOffset)
+                        library.left.To = Vector2.new(leftLegPos.X - width, leftLegPos.Y + heightOffset)
+
+                        -- Línea derecha desde la cabeza hasta la pierna derecha
+                        library.right.From = Vector2.new(headPos.X + width, headPos.Y - heightOffset)
+                        library.right.To = Vector2.new(rightLegPos.X + width, rightLegPos.Y + heightOffset)
+
+Visibility(true, library)
 end
-
--- Función para aplicar el color y el contorno a cada parte del jugador
-local function ApplyColorAndOutline(plr)
-    local humanoid = plr.Character:FindFirstChild("Humanoid")
-    if not humanoid then return end
-
-    -- Función que actualiza el color y contorno de cada parte del personaje
-    local function UpdateAppearance()
-        if not Settings.healthbar then
-            -- Si el healthbar está desactivado, restaurar colores originales
-            for _, part in ipairs(plr.Character:GetChildren()) do
-                if part:IsA("BasePart") then
-                    part.Color = part.OriginalColor or part.Color
-                    part.Transparency = part.OriginalTransparency or 0
-                    local contour = part:FindFirstChild("Contour")
-                    if contour then
-                        contour:Destroy()  -- Remover el contorno si existe
-                    end
-                end
-            end
-            return
-        end
-
-        local healthRatio = humanoid.Health / humanoid.MaxHealth
-        local color = UpdateColor(healthRatio)
-
-        -- Cambiar el color de cada parte del personaje y aplicar transparencia para un efecto de opacidad
-        for _, part in ipairs(plr.Character:GetChildren()) do
-            if part:IsA("BasePart") then
-                part.OriginalColor = part.OriginalColor or part.Color -- Guardar el color original
-                part.OriginalTransparency = part.OriginalTransparency or part.Transparency
-                part.Color = color
-                part.Transparency = 0.5  -- Ajusta la opacidad del personaje
-
-                -- Crear el contorno usando un SurfaceGui
-                local contour = part:FindFirstChild("Contour")
-                if not contour then
-                    contour = Instance.new("SurfaceGui")
-                    contour.Name = "Contour"
-                    contour.AlwaysOnTop = true
-                    contour.Parent = part
-
-                    for _, face in ipairs(Enum.NormalId:GetEnumItems()) do
-                        local border = Instance.new("Frame")
-                        border.Size = UDim2.new(1, Settings.ContourThickness, 1, Settings.ContourThickness)
-                        border.BackgroundTransparency = 0.5
-                        border.BackgroundColor3 = Settings.ContourColor
-                        border.Parent = contour
-                        border.ZIndex = 2
-                    end
-                end
-            end
-        end
-    end
-
-    -- Conectar al evento de cambio de vida del jugador
-    local healthConnection = humanoid.HealthChanged:Connect(UpdateAppearance)
-
-    -- Conectar al evento de render para asegurarse de que el contorno y el color se actualizan en tiempo real
-    game:GetService("RunService").RenderStepped:Connect(function()
-        if plr.Character then
-            UpdateAppearance()
-        end
-    end)
-end
-
--- Aplicar a todos los jugadores excepto el jugador local
-for _, v in pairs(game:GetService("Players"):GetPlayers()) do
-    if v.Name ~= player.Name then
-        coroutine.wrap(ApplyColorAndOutline)(v)
-    end
-end
-
-game.Players.PlayerAdded:Connect(function(newplr)
-    if newplr.Name ~= player.Name then
-        coroutine.wrap(ApplyColorAndOutline)(newplr)
-    end
-end)
+~                else
+~                    Visibility(false, library)
+~                end
+~            else
+~                Visibility(false, library)
+~                if not game.Players:FindFirstChild(plr.Name) then
+~                    connection:Disconnect()
+~                end
+~            end
+~        end)
+~    end
+~    coroutine.wrap(Updater)()
+~end
+~
+~for _, v in pairs(game:GetService("Players"):GetPlayers()) do
+~    if v.Name ~= player.Name then
+~        coroutine.wrap(ESP)(v)
+~    end
+~end
+~
+~game.Players.PlayerAdded:Connect(function(newplr)
+~    if newplr.Name ~= player.Name then
+~        coroutine.wrap(ESP)(newplr)
+~    end
+~end)
