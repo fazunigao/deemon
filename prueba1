@@ -18,6 +18,8 @@ local TeamColor = true
 local player = game:GetService("Players").LocalPlayer
 local camera = game:GetService("Workspace").CurrentCamera
 
+local espEnabled = true -- Control del estado del ESP
+
 local function NewLine(thickness, color)
     local line = Drawing.new("Line")
     line.Visible = false
@@ -39,34 +41,45 @@ local function NewQuad(thickness, color)
     quad.Color = color
     quad.Filled = false
     quad.Thickness = thickness
-    quad.Transparency = 1
+    quad.Transparency = 0.5 -- Un poco de transparencia
     return quad
 end
 
 local black = Color3.fromRGB(0, 0, 0)
 local white = Color3.fromRGB(255, 255, 255)
 
+local function ToggleESP()
+    espEnabled = not espEnabled
+    for _, v in pairs(game:GetService("Players"):GetPlayers()) do
+        if v.Name ~= player.Name then
+            if espEnabled then
+                ESP(v)
+            else
+                Visibility(false, library)
+            end
+        end
+    end
+end
+
 local function ESP(plr)
     local library = {
-        tracer = NewLine(Settings.Tracer_Thickness, Settings.Tracer_Color),
-        healthbar = NewLine(3, black),
-        greenhealth = NewLine(1.5, black),
         silhouette = {
-            NewLine(2, white),
+            NewLine(2, white), -- Límite de la silueta
             NewLine(2, white),
             NewLine(2, white),
             NewLine(2, white)
-        }
+        },
+        healthbar = NewQuad(4, Color3.fromRGB(0, 255, 0)), -- Barra de vida
+        healthbg = NewQuad(4, black) -- Fondo de la barra de vida
     }
 
     local function Updater()
         local connection
         connection = game:GetService("RunService").RenderStepped:Connect(function()
-            if plr.Character and plr.Character:FindFirstChild("Humanoid") and plr.Character:FindFirstChild("HumanoidRootPart") and plr.Character.Humanoid.Health > 0 and plr.Character:FindFirstChild("Head") then
+            if espEnabled and plr.Character and plr.Character:FindFirstChild("Humanoid") and plr.Character:FindFirstChild("HumanoidRootPart") and plr.Character.Humanoid.Health > 0 and plr.Character:FindFirstChild("Head") then
                 local HumPos, OnScreen = camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
                 if OnScreen then
                     local head = camera:WorldToViewportPoint(plr.Character.Head.Position)
-                    local feet = camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position - Vector3.new(0, 2, 0))
                     local DistanceY = math.clamp((Vector2.new(head.X, head.Y) - Vector2.new(HumPos.X, HumPos.Y)).magnitude, 2, math.huge)
 
                     -- Actualiza las líneas de la silueta
@@ -86,17 +99,22 @@ local function ESP(plr)
                         line.Visible = true
                     end
 
-                    -- Health Bar
+                    -- Barra de vida
                     local d = (Vector2.new(HumPos.X - DistanceY, HumPos.Y - DistanceY * 2) - Vector2.new(HumPos.X - DistanceY, HumPos.Y + DistanceY * 2)).magnitude
                     local healthoffset = plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth * d
 
-                    library.greenhealth.From = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y + DistanceY * 2)
-                    library.greenhealth.To = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y + DistanceY * 2 - healthoffset)
+                    library.healthbg.PointA = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y + DistanceY * 2 + 4)
+                    library.healthbg.PointB = Vector2.new(HumPos.X + DistanceY + 4, HumPos.Y + DistanceY * 2 + 4)
+                    library.healthbg.PointC = Vector2.new(HumPos.X + DistanceY + 4, HumPos.Y + DistanceY * 2 - 4)
+                    library.healthbg.PointD = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y + DistanceY * 2 - 4)
 
-                    library.healthbar.From = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y + DistanceY * 2)
-                    library.healthbar.To = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y - DistanceY * 2)
+                    library.healthbar.PointA = Vector2.new(HumPos.X - DistanceY, HumPos.Y + DistanceY * 2 + 2)
+                    library.healthbar.PointB = Vector2.new(HumPos.X + DistanceY, HumPos.Y + DistanceY * 2 + 2)
+                    library.healthbar.PointC = Vector2.new(HumPos.X + DistanceY, HumPos.Y + DistanceY * 2 - 2)
+                    library.healthbar.PointD = Vector2.new(HumPos.X - DistanceY, HumPos.Y + DistanceY * 2 - 2)
 
-                    library.greenhealth.Color = Color3.fromRGB(0, 255, 0):lerp(Color3.fromRGB(255, 0, 0), plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
+                    -- Color de la barra de vida
+                    library.healthbar.Color = Color3.fromRGB(0, 255, 0):lerp(Color3.fromRGB(255, 0, 0), plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
 
                     -- Hacer visibles todos los elementos
                     Visibility(true, library)
@@ -130,5 +148,12 @@ end
 game.Players.PlayerAdded:Connect(function(newplr)
     if newplr.Name ~= player.Name then
         coroutine.wrap(ESP)(newplr)
+    end
+end)
+
+-- Alternar el ESP
+game:GetService("UserInputService").InputBegan:Connect(function(input, isProcessed)
+    if not isProcessed and input.KeyCode == Enum.KeyCode.E then
+        ToggleESP()
     end
 end)
