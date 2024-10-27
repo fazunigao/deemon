@@ -1,59 +1,31 @@
-local leftLegPos = camera:WorldToViewportPoint(leftLeg.Position)
-local rightLegPos = camera:WorldToViewportPoint(rightLeg.Position)
+local function Updater()
+    local connection
+    connection = game:GetService("RunService").RenderStepped:Connect(function()
+        if plr.Character and plr.Character:FindFirstChild("Humanoid") and plr.Character:FindFirstChild("HumanoidRootPart") then
+            local humanoid = plr.Character.Humanoid
+            local HumPos, OnScreen = camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
+            if OnScreen then
+                local healthRatio = humanoid.Health / humanoid.MaxHealth
 
-                        -- Ajustar líneas solo para el contorno de la silueta
-                        library.top.From = Vector2.new(headPos.X, headPos.Y - 8)
-                        library.top.To = Vector2.new(torsoPos.X, torsoPos.Y - 10)
-                        -- Ajustar líneas solo para el contorno de la silueta, alineado correctamente
-                        local width = 15  -- Ancho del contorno
-                        local heightOffset = 10 -- Offset para evitar líneas extrañas
+                -- Solo actualizar el color de la barra de salud si está activa
+                if Settings.healthbar then
+                    UpdateColor(healthRatio)  -- Muestra la barra de salud si healthbar está activado
+                else
+                    Visibility(false, library) -- Oculta la barra de salud si healthbar está desactivado
+                end
 
-                        library.bottom.From = Vector2.new(leftLegPos.X, leftLegPos.Y)
-                        library.bottom.To = Vector2.new(rightLegPos.X, rightLegPos.Y)
-                        -- Línea superior desde la cabeza
-                        library.top.From = Vector2.new(headPos.X - width, headPos.Y - heightOffset)
-                        library.top.To = Vector2.new(headPos.X + width, headPos.Y - heightOffset)
-
-                        library.left.From = Vector2.new(leftLegPos.X, leftLegPos.Y)
-                        library.left.To = Vector2.new(headPos.X, headPos.Y)
-                        -- Línea inferior de las piernas
-                        library.bottom.From = Vector2.new(leftLegPos.X - width, leftLegPos.Y + heightOffset)
-                        library.bottom.To = Vector2.new(rightLegPos.X + width, rightLegPos.Y + heightOffset)
-
-                        library.right.From = Vector2.new(rightLegPos.X, rightLegPos.Y)
-                        library.right.To = Vector2.new(torsoPos.X, torsoPos.Y - 10)
-                        -- Línea izquierda desde la cabeza hasta la pierna izquierda
-                        library.left.From = Vector2.new(headPos.X - width, headPos.Y - heightOffset)
-                        library.left.To = Vector2.new(leftLegPos.X - width, leftLegPos.Y + heightOffset)
-
-                        -- Línea derecha desde la cabeza hasta la pierna derecha
-                        library.right.From = Vector2.new(headPos.X + width, headPos.Y - heightOffset)
-                        library.right.To = Vector2.new(rightLegPos.X + width, rightLegPos.Y + heightOffset)
-
-Visibility(true, library)
+                -- Tu lógica adicional para la silueta del personaje
+                -- ...
+                
+                Visibility(true, library) -- Asegura que el contorno esté visible cuando esté en pantalla
+            else
+                Visibility(false, library)
+            end
+        else
+            Visibility(false, library)
+            if not game.Players:FindFirstChild(plr.Name) then
+                connection:Disconnect()
+            end
+        end
+    end)
 end
-~                else
-~                    Visibility(false, library)
-~                end
-~            else
-~                Visibility(false, library)
-~                if not game.Players:FindFirstChild(plr.Name) then
-~                    connection:Disconnect()
-~                end
-~            end
-~        end)
-~    end
-~    coroutine.wrap(Updater)()
-~end
-~
-~for _, v in pairs(game:GetService("Players"):GetPlayers()) do
-~    if v.Name ~= player.Name then
-~        coroutine.wrap(ESP)(v)
-~    end
-~end
-~
-~game.Players.PlayerAdded:Connect(function(newplr)
-~    if newplr.Name ~= player.Name then
-~        coroutine.wrap(ESP)(newplr)
-~    end
-~end)
