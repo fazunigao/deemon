@@ -61,18 +61,25 @@ local function ESP(plr)
                         local leftLegPos = camera:WorldToViewportPoint(leftLeg.Position)
                         local rightLegPos = camera:WorldToViewportPoint(rightLeg.Position)
 
-                        -- Ajustar líneas solo para el contorno de la silueta
-                        library.top.From = Vector2.new(headPos.X, headPos.Y - 8)
-                        library.top.To = Vector2.new(torsoPos.X, torsoPos.Y - 10)
+                        -- Ajustar líneas solo para el contorno de la silueta, alineado correctamente
+                        local width = 15  -- Ancho del contorno
+                        local heightOffset = 10 -- Offset para evitar líneas extrañas
 
-                        library.bottom.From = Vector2.new(leftLegPos.X, leftLegPos.Y)
-                        library.bottom.To = Vector2.new(rightLegPos.X, rightLegPos.Y)
+                        -- Línea superior desde la cabeza
+                        library.top.From = Vector2.new(headPos.X - width, headPos.Y - heightOffset)
+                        library.top.To = Vector2.new(headPos.X + width, headPos.Y - heightOffset)
 
-                        library.left.From = Vector2.new(leftLegPos.X, leftLegPos.Y)
-                        library.left.To = Vector2.new(headPos.X, headPos.Y)
+                        -- Línea inferior de las piernas
+                        library.bottom.From = Vector2.new(leftLegPos.X - width, leftLegPos.Y + heightOffset)
+                        library.bottom.To = Vector2.new(rightLegPos.X + width, rightLegPos.Y + heightOffset)
 
-                        library.right.From = Vector2.new(rightLegPos.X, rightLegPos.Y)
-                        library.right.To = Vector2.new(torsoPos.X, torsoPos.Y - 10)
+                        -- Línea izquierda desde la cabeza hasta la pierna izquierda
+                        library.left.From = Vector2.new(headPos.X - width, headPos.Y - heightOffset)
+                        library.left.To = Vector2.new(leftLegPos.X - width, leftLegPos.Y + heightOffset)
+
+                        -- Línea derecha desde la cabeza hasta la pierna derecha
+                        library.right.From = Vector2.new(headPos.X + width, headPos.Y - heightOffset)
+                        library.right.To = Vector2.new(rightLegPos.X + width, rightLegPos.Y + heightOffset)
 
                         Visibility(true, library)
                     end
