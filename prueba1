@@ -48,23 +48,27 @@ local function ESP(plr)
                     UpdateColor(healthRatio)
 
                     -- Tamaños y posiciones para la silueta
-                    local head = camera:WorldToViewportPoint(plr.Character.Head.Position)
-                    local DistanceY = 30
-                    local DistanceX = 20
+                    local head = plr.Character:FindFirstChild("Head")
+                    local sizeOffset = 0.5 * (150 / (humanoid.Health / humanoid.MaxHealth + 0.1)) -- Ajusta este valor para la distancia
 
-                    library.top.From = Vector2.new(HumPos.X - DistanceX, HumPos.Y - DistanceY)
-                    library.top.To = Vector2.new(HumPos.X + DistanceX, HumPos.Y - DistanceY)
+                    if head then
+                        local headPos = camera:WorldToViewportPoint(head.Position)
+                        local humanoidRootPartPos = camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
 
-                    library.bottom.From = Vector2.new(HumPos.X - DistanceX, HumPos.Y + DistanceY)
-                    library.bottom.To = Vector2.new(HumPos.X + DistanceX, HumPos.Y + DistanceY)
+                        library.top.From = Vector2.new(humanoidRootPartPos.X - sizeOffset, humanoidRootPartPos.Y - sizeOffset)
+                        library.top.To = Vector2.new(humanoidRootPartPos.X + sizeOffset, humanoidRootPartPos.Y - sizeOffset)
 
-                    library.left.From = Vector2.new(HumPos.X - DistanceX, HumPos.Y - DistanceY)
-                    library.left.To = Vector2.new(HumPos.X - DistanceX, HumPos.Y + DistanceY)
+                        library.bottom.From = Vector2.new(humanoidRootPartPos.X - sizeOffset, humanoidRootPartPos.Y + sizeOffset)
+                        library.bottom.To = Vector2.new(humanoidRootPartPos.X + sizeOffset, humanoidRootPartPos.Y + sizeOffset)
 
-                    library.right.From = Vector2.new(HumPos.X + DistanceX, HumPos.Y - DistanceY)
-                    library.right.To = Vector2.new(HumPos.X + DistanceX, HumPos.Y + DistanceY)
+                        library.left.From = Vector2.new(humanoidRootPartPos.X - sizeOffset, humanoidRootPartPos.Y - sizeOffset)
+                        library.left.To = Vector2.new(humanoidRootPartPos.X - sizeOffset, humanoidRootPartPos.Y + sizeOffset)
 
-                    Visibility(true, library)
+                        library.right.From = Vector2.new(humanoidRootPartPos.X + sizeOffset, humanoidRootPartPos.Y - sizeOffset)
+                        library.right.To = Vector2.new(humanoidRootPartPos.X + sizeOffset, humanoidRootPartPos.Y + sizeOffset)
+
+                        Visibility(true, library)
+                    end
                 else
                     Visibility(false, library)
                 end
