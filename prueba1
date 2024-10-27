@@ -24,6 +24,10 @@ local function ApplyColorAndOutline(plr)
                 if part:IsA("BasePart") then
                     part.Color = part.OriginalColor or part.Color
                     part.Transparency = part.OriginalTransparency or 0
+                    local contour = part:FindFirstChild("Contour")
+                    if contour then
+                        contour:Destroy()  -- Remover el contorno si existe
+                    end
                 end
             end
             return
