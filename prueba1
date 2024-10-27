@@ -17,7 +17,6 @@ local TeamColor = true
 
 local player = game:GetService("Players").LocalPlayer
 local camera = game:GetService("Workspace").CurrentCamera
-local mouse = player:GetMouse()
 
 local function NewLine(thickness, color)
     local line = Drawing.new("Line")
@@ -72,27 +71,28 @@ local function ESP(plr)
                     local DistanceY = math.clamp((Vector2.new(head.X, head.Y) - Vector2.new(HumPos.X, HumPos.Y)).magnitude, 2, math.huge)
 
                     local function Size(item)
-                        item.PointA = Vector2.new(HumPos.X + DistanceY, HumPos.Y - DistanceY*2)
-                        item.PointB = Vector2.new(HumPos.X - DistanceY, HumPos.Y - DistanceY*2)
-                        item.PointC = Vector2.new(HumPos.X - DistanceY, HumPos.Y + DistanceY*2)
-                        item.PointD = Vector2.new(HumPos.X + DistanceY, HumPos.Y + DistanceY*2)
+                        item.PointA = Vector2.new(HumPos.X + DistanceY, HumPos.Y - DistanceY * 2)
+                        item.PointB = Vector2.new(HumPos.X - DistanceY, HumPos.Y - DistanceY * 2)
+                        item.PointC = Vector2.new(HumPos.X - DistanceY, HumPos.Y + DistanceY * 2)
+                        item.PointD = Vector2.new(HumPos.X + DistanceY, HumPos.Y + DistanceY * 2)
                     end
 
                     Size(library.box)
 
                     -- Dibuja la silueta del jugador
-                    library.silhouette.From = Vector2.new(HumPos.X + DistanceY, HumPos.Y - DistanceY*2)
-                    library.silhouette.To = Vector2.new(HumPos.X - DistanceY, HumPos.Y - DistanceY*2)
+                    library.silhouette.From = Vector2.new(HumPos.X + DistanceY, HumPos.Y - DistanceY * 2)
+                    library.silhouette.To = Vector2.new(HumPos.X - DistanceY, HumPos.Y - DistanceY * 2)
+                    library.silhouette.Visible = true -- Asegúrate de que la silueta sea visible
 
                     -- Health Bar
-                    local d = (Vector2.new(HumPos.X - DistanceY, HumPos.Y - DistanceY*2) - Vector2.new(HumPos.X - DistanceY, HumPos.Y + DistanceY*2)).magnitude
+                    local d = (Vector2.new(HumPos.X - DistanceY, HumPos.Y - DistanceY * 2) - Vector2.new(HumPos.X - DistanceY, HumPos.Y + DistanceY * 2)).magnitude
                     local healthoffset = plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth * d
 
-                    library.greenhealth.From = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y + DistanceY*2)
-                    library.greenhealth.To = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y + DistanceY*2 - healthoffset)
+                    library.greenhealth.From = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y + DistanceY * 2)
+                    library.greenhealth.To = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y + DistanceY * 2 - healthoffset)
 
-                    library.healthbar.From = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y + DistanceY*2)
-                    library.healthbar.To = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y - DistanceY*2)
+                    library.healthbar.From = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y + DistanceY * 2)
+                    library.healthbar.To = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y - DistanceY * 2)
 
                     library.greenhealth.Color = Color3.fromRGB(0, 255, 0):lerp(Color3.fromRGB(255, 0, 0), plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
 
@@ -101,6 +101,7 @@ local function ESP(plr)
                     library.nameTag.Text = plr.Name
                     library.nameTag.Visible = true
 
+                    -- Hacer visibles todos los elementos
                     Visibility(true, library)
                 else
                     Visibility(false, library)
@@ -113,10 +114,11 @@ local function ESP(plr)
             end
         end)
     end
+
     coroutine.wrap(Updater)()
 end
 
-for i, v in pairs(game:GetService("Players"):GetPlayers()) do
+for _, v in pairs(game:GetService("Players"):GetPlayers()) do
     if v.Name ~= player.Name then
         coroutine.wrap(ESP)(v)
     end
