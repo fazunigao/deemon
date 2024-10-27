@@ -49,17 +49,15 @@ local white = Color3.fromRGB(255, 255, 255)
 local function ESP(plr)
     local library = {
         tracer = NewLine(Settings.Tracer_Thickness, Settings.Tracer_Color),
-        box = NewQuad(Settings.Box_Thickness, Settings.Box_Color),
         healthbar = NewLine(3, black),
         greenhealth = NewLine(1.5, black),
-        silhouette = NewLine(2, white), -- Silueta del jugador
-        nameTag = Drawing.new("Text") -- Nombre del jugador
+        silhouette = {
+            NewLine(2, white),
+            NewLine(2, white),
+            NewLine(2, white),
+            NewLine(2, white)
+        }
     }
-
-    library.nameTag.Size = 14
-    library.nameTag.Color = Color3.new(1, 1, 1) -- Blanco
-    library.nameTag.Transparency = 0.5 -- Baja opacidad
-    library.nameTag.Visible = false
 
     local function Updater()
         local connection
@@ -68,21 +66,25 @@ local function ESP(plr)
                 local HumPos, OnScreen = camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
                 if OnScreen then
                     local head = camera:WorldToViewportPoint(plr.Character.Head.Position)
+                    local feet = camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position - Vector3.new(0, 2, 0))
                     local DistanceY = math.clamp((Vector2.new(head.X, head.Y) - Vector2.new(HumPos.X, HumPos.Y)).magnitude, 2, math.huge)
 
-                    local function Size(item)
-                        item.PointA = Vector2.new(HumPos.X + DistanceY, HumPos.Y - DistanceY * 2)
-                        item.PointB = Vector2.new(HumPos.X - DistanceY, HumPos.Y - DistanceY * 2)
-                        item.PointC = Vector2.new(HumPos.X - DistanceY, HumPos.Y + DistanceY * 2)
-                        item.PointD = Vector2.new(HumPos.X + DistanceY, HumPos.Y + DistanceY * 2)
+                    -- Actualiza las líneas de la silueta
+                    library.silhouette[1].From = Vector2.new(HumPos.X + DistanceY, HumPos.Y - DistanceY * 2) -- Inferior derecha
+                    library.silhouette[1].To = Vector2.new(HumPos.X + DistanceY, HumPos.Y + DistanceY * 2) -- Superior derecha
+
+                    library.silhouette[2].From = Vector2.new(HumPos.X - DistanceY, HumPos.Y - DistanceY * 2) -- Inferior izquierda
+                    library.silhouette[2].To = Vector2.new(HumPos.X - DistanceY, HumPos.Y + DistanceY * 2) -- Superior izquierda
+
+                    library.silhouette[3].From = Vector2.new(HumPos.X + DistanceY, HumPos.Y + DistanceY * 2) -- Superior derecha
+                    library.silhouette[3].To = Vector2.new(HumPos.X - DistanceY, HumPos.Y + DistanceY * 2) -- Superior izquierda
+
+                    library.silhouette[4].From = Vector2.new(HumPos.X + DistanceY, HumPos.Y - DistanceY * 2) -- Inferior derecha
+                    library.silhouette[4].To = Vector2.new(HumPos.X - DistanceY, HumPos.Y - DistanceY * 2) -- Inferior izquierda
+
+                    for _, line in pairs(library.silhouette) do
+                        line.Visible = true
                     end
-
-                    Size(library.box)
-
-                    -- Dibuja la silueta del jugador
-                    library.silhouette.From = Vector2.new(HumPos.X + DistanceY, HumPos.Y - DistanceY * 2)
-                    library.silhouette.To = Vector2.new(HumPos.X - DistanceY, HumPos.Y - DistanceY * 2)
-                    library.silhouette.Visible = true -- Asegúrate de que la silueta sea visible
 
                     -- Health Bar
                     local d = (Vector2.new(HumPos.X - DistanceY, HumPos.Y - DistanceY * 2) - Vector2.new(HumPos.X - DistanceY, HumPos.Y + DistanceY * 2)).magnitude
@@ -96,17 +98,18 @@ local function ESP(plr)
 
                     library.greenhealth.Color = Color3.fromRGB(0, 255, 0):lerp(Color3.fromRGB(255, 0, 0), plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
 
-                    -- Actualiza el nombre del jugador
-                    library.nameTag.Position = Vector2.new(HumPos.X, HumPos.Y - DistanceY - 20)
-                    library.nameTag.Text = plr.Name
-                    library.nameTag.Visible = true
-
                     -- Hacer visibles todos los elementos
                     Visibility(true, library)
                 else
+                    for _, line in pairs(library.silhouette) do
+                        line.Visible = false
+                    end
                     Visibility(false, library)
                 end
             else
+                for _, line in pairs(library.silhouette) do
+                    line.Visible = false
+                end
                 Visibility(false, library)
                 if game.Players:FindFirstChild(plr.Name) == nil then
                     connection:Disconnect()
