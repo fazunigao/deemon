@@ -1,0 +1,129 @@
+local Settings = {
+    Box_Color = Color3.fromRGB(255, 0, 0),
+    Tracer_Color = Color3.fromRGB(255, 0, 0),
+    Tracer_Thickness = 1,
+    Box_Thickness = 1,
+    Tracer_Origin = "Bottom",
+    Tracer_FollowMouse = false,
+    Tracers = true
+}
+
+local Team_Check = {
+    TeamCheck = false,
+    Green = Color3.fromRGB(0, 255, 0),
+    Red = Color3.fromRGB(255, 0, 0)
+}
+local TeamColor = true
+
+local player = game:GetService("Players").LocalPlayer
+local camera = game:GetService("Workspace").CurrentCamera
+local mouse = player:GetMouse()
+
+local function NewLine(thickness, color)
+    local line = Drawing.new("Line")
+    line.Visible = false
+    line.From = Vector2.new(0, 0)
+    line.To = Vector2.new(0, 0)
+    line.Color = color
+    line.Thickness = thickness
+    line.Transparency = 1
+    return line
+end
+
+local function NewQuad(thickness, color)
+    local quad = Drawing.new("Quad")
+    quad.Visible = false
+    quad.PointA = Vector2.new(0, 0)
+    quad.PointB = Vector2.new(0, 0)
+    quad.PointC = Vector2.new(0, 0)
+    quad.PointD = Vector2.new(0, 0)
+    quad.Color = color
+    quad.Filled = false
+    quad.Thickness = thickness
+    quad.Transparency = 1
+    return quad
+end
+
+local black = Color3.fromRGB(0, 0, 0)
+local white = Color3.fromRGB(255, 255, 255)
+
+local function ESP(plr)
+    local library = {
+        tracer = NewLine(Settings.Tracer_Thickness, Settings.Tracer_Color),
+        box = NewQuad(Settings.Box_Thickness, Settings.Box_Color),
+        healthbar = NewLine(3, black),
+        greenhealth = NewLine(1.5, black),
+        silhouette = NewLine(2, white), -- Silueta del jugador
+        nameTag = Drawing.new("Text") -- Nombre del jugador
+    }
+
+    library.nameTag.Size = 14
+    library.nameTag.Color = Color3.new(1, 1, 1) -- Blanco
+    library.nameTag.Transparency = 0.5 -- Baja opacidad
+    library.nameTag.Visible = false
+
+    local function Updater()
+        local connection
+        connection = game:GetService("RunService").RenderStepped:Connect(function()
+            if plr.Character and plr.Character:FindFirstChild("Humanoid") and plr.Character:FindFirstChild("HumanoidRootPart") and plr.Character.Humanoid.Health > 0 and plr.Character:FindFirstChild("Head") then
+                local HumPos, OnScreen = camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
+                if OnScreen then
+                    local head = camera:WorldToViewportPoint(plr.Character.Head.Position)
+                    local DistanceY = math.clamp((Vector2.new(head.X, head.Y) - Vector2.new(HumPos.X, HumPos.Y)).magnitude, 2, math.huge)
+
+                    local function Size(item)
+                        item.PointA = Vector2.new(HumPos.X + DistanceY, HumPos.Y - DistanceY*2)
+                        item.PointB = Vector2.new(HumPos.X - DistanceY, HumPos.Y - DistanceY*2)
+                        item.PointC = Vector2.new(HumPos.X - DistanceY, HumPos.Y + DistanceY*2)
+                        item.PointD = Vector2.new(HumPos.X + DistanceY, HumPos.Y + DistanceY*2)
+                    end
+
+                    Size(library.box)
+
+                    -- Dibuja la silueta del jugador
+                    library.silhouette.From = Vector2.new(HumPos.X + DistanceY, HumPos.Y - DistanceY*2)
+                    library.silhouette.To = Vector2.new(HumPos.X - DistanceY, HumPos.Y - DistanceY*2)
+
+                    -- Health Bar
+                    local d = (Vector2.new(HumPos.X - DistanceY, HumPos.Y - DistanceY*2) - Vector2.new(HumPos.X - DistanceY, HumPos.Y + DistanceY*2)).magnitude
+                    local healthoffset = plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth * d
+
+                    library.greenhealth.From = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y + DistanceY*2)
+                    library.greenhealth.To = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y + DistanceY*2 - healthoffset)
+
+                    library.healthbar.From = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y + DistanceY*2)
+                    library.healthbar.To = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y - DistanceY*2)
+
+                    library.greenhealth.Color = Color3.fromRGB(0, 255, 0):lerp(Color3.fromRGB(255, 0, 0), plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
+
+                    -- Actualiza el nombre del jugador
+                    library.nameTag.Position = Vector2.new(HumPos.X, HumPos.Y - DistanceY - 20)
+                    library.nameTag.Text = plr.Name
+                    library.nameTag.Visible = true
+
+                    Visibility(true, library)
+                else
+                    Visibility(false, library)
+                end
+            else
+                Visibility(false, library)
+                if game.Players:FindFirstChild(plr.Name) == nil then
+                    connection:Disconnect()
+                end
+            end
+        end)
+    end
+    coroutine.wrap(Updater)()
+end
+
+for i, v in pairs(game:GetService("Players"):GetPlayers()) do
+    if v.Name ~= player.Name then
+        coroutine.wrap(ESP)(v)
+    end
+end
+
+game.Players.PlayerAdded:Connect(function(newplr)
+    if newplr.Name ~= player.Name then
+        coroutine.wrap(ESP)(newplr)
+    end
+end)
