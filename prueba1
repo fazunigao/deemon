@@ -39,7 +39,7 @@ local function NewQuad(thickness, color)
     quad.PointC = Vector2.new(0, 0)
     quad.PointD = Vector2.new(0, 0)
     quad.Color = color
-    quad.Filled = false
+    quad.Filled = true -- Asegúrate de que esté lleno
     quad.Thickness = thickness
     quad.Transparency = 0.5 -- Un poco de transparencia
     return quad
@@ -64,7 +64,7 @@ end
 local function ESP(plr)
     local library = {
         silhouette = {
-            NewLine(2, white), -- Límite de la silueta
+            NewLine(2, white),
             NewLine(2, white),
             NewLine(2, white),
             NewLine(2, white)
@@ -83,17 +83,17 @@ local function ESP(plr)
                     local DistanceY = math.clamp((Vector2.new(head.X, head.Y) - Vector2.new(HumPos.X, HumPos.Y)).magnitude, 2, math.huge)
 
                     -- Actualiza las líneas de la silueta
-                    library.silhouette[1].From = Vector2.new(HumPos.X + DistanceY, HumPos.Y - DistanceY * 2) -- Inferior derecha
-                    library.silhouette[1].To = Vector2.new(HumPos.X + DistanceY, HumPos.Y + DistanceY * 2) -- Superior derecha
+                    library.silhouette[1].From = Vector2.new(HumPos.X + DistanceY, HumPos.Y - DistanceY * 2)
+                    library.silhouette[1].To = Vector2.new(HumPos.X + DistanceY, HumPos.Y + DistanceY * 2)
 
-                    library.silhouette[2].From = Vector2.new(HumPos.X - DistanceY, HumPos.Y - DistanceY * 2) -- Inferior izquierda
-                    library.silhouette[2].To = Vector2.new(HumPos.X - DistanceY, HumPos.Y + DistanceY * 2) -- Superior izquierda
+                    library.silhouette[2].From = Vector2.new(HumPos.X - DistanceY, HumPos.Y - DistanceY * 2)
+                    library.silhouette[2].To = Vector2.new(HumPos.X - DistanceY, HumPos.Y + DistanceY * 2)
 
-                    library.silhouette[3].From = Vector2.new(HumPos.X + DistanceY, HumPos.Y + DistanceY * 2) -- Superior derecha
-                    library.silhouette[3].To = Vector2.new(HumPos.X - DistanceY, HumPos.Y + DistanceY * 2) -- Superior izquierda
+                    library.silhouette[3].From = Vector2.new(HumPos.X + DistanceY, HumPos.Y + DistanceY * 2)
+                    library.silhouette[3].To = Vector2.new(HumPos.X - DistanceY, HumPos.Y + DistanceY * 2)
 
-                    library.silhouette[4].From = Vector2.new(HumPos.X + DistanceY, HumPos.Y - DistanceY * 2) -- Inferior derecha
-                    library.silhouette[4].To = Vector2.new(HumPos.X - DistanceY, HumPos.Y - DistanceY * 2) -- Inferior izquierda
+                    library.silhouette[4].From = Vector2.new(HumPos.X + DistanceY, HumPos.Y - DistanceY * 2)
+                    library.silhouette[4].To = Vector2.new(HumPos.X - DistanceY, HumPos.Y - DistanceY * 2)
 
                     for _, line in pairs(library.silhouette) do
                         line.Visible = true
@@ -101,20 +101,19 @@ local function ESP(plr)
 
                     -- Barra de vida
                     local d = (Vector2.new(HumPos.X - DistanceY, HumPos.Y - DistanceY * 2) - Vector2.new(HumPos.X - DistanceY, HumPos.Y + DistanceY * 2)).magnitude
-                    local healthoffset = plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth * d
+                    local healthoffset = (plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth) * d
 
+                    -- Configurar el fondo de la barra de vida
                     library.healthbg.PointA = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y + DistanceY * 2 + 4)
                     library.healthbg.PointB = Vector2.new(HumPos.X + DistanceY + 4, HumPos.Y + DistanceY * 2 + 4)
                     library.healthbg.PointC = Vector2.new(HumPos.X + DistanceY + 4, HumPos.Y + DistanceY * 2 - 4)
                     library.healthbg.PointD = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y + DistanceY * 2 - 4)
 
+                    -- Configurar la barra de vida
                     library.healthbar.PointA = Vector2.new(HumPos.X - DistanceY, HumPos.Y + DistanceY * 2 + 2)
-                    library.healthbar.PointB = Vector2.new(HumPos.X + DistanceY, HumPos.Y + DistanceY * 2 + 2)
-                    library.healthbar.PointC = Vector2.new(HumPos.X + DistanceY, HumPos.Y + DistanceY * 2 - 2)
+                    library.healthbar.PointB = Vector2.new(HumPos.X - DistanceY + healthoffset, HumPos.Y + DistanceY * 2 + 2)
+                    library.healthbar.PointC = Vector2.new(HumPos.X - DistanceY + healthoffset, HumPos.Y + DistanceY * 2 - 2)
                     library.healthbar.PointD = Vector2.new(HumPos.X - DistanceY, HumPos.Y + DistanceY * 2 - 2)
-
-                    -- Color de la barra de vida
-                    library.healthbar.Color = Color3.fromRGB(0, 255, 0):lerp(Color3.fromRGB(255, 0, 0), plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
 
                     -- Hacer visibles todos los elementos
                     Visibility(true, library)
