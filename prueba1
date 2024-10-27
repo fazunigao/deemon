@@ -48,7 +48,7 @@ local function ESP(plr)
                     local healthRatio = humanoid.Health / humanoid.MaxHealth
                     UpdateColor(healthRatio)
 
-                    -- Calcular la silueta alrededor del jugador usando partes del cuerpo
+                    -- Obtener posiciones en pantalla para las partes del cuerpo
                     local head = plr.Character:FindFirstChild("Head")
                     local torso = plr.Character:FindFirstChild("UpperTorso") or plr.Character:FindFirstChild("Torso")
                     local leftLeg = plr.Character:FindFirstChild("LeftLeg") or plr.Character:FindFirstChild("LeftLowerLeg")
@@ -61,24 +61,18 @@ local function ESP(plr)
                         local leftLegPos = camera:WorldToViewportPoint(leftLeg.Position)
                         local rightLegPos = camera:WorldToViewportPoint(rightLeg.Position)
 
-                        -- Calcular posiciones para el borde de la silueta
-                        local minX = math.min(headPos.X, torsoPos.X, leftLegPos.X, rightLegPos.X) - 8
-                        local maxX = math.max(headPos.X, torsoPos.X, leftLegPos.X, rightLegPos.X) + 8
-                        local minY = math.min(headPos.Y, torsoPos.Y) - 10
-                        local maxY = math.max(torsoPos.Y, leftLegPos.Y, rightLegPos.Y) + 10
+                        -- Ajustar líneas solo para el contorno de la silueta
+                        library.top.From = Vector2.new(headPos.X, headPos.Y - 8)
+                        library.top.To = Vector2.new(torsoPos.X, torsoPos.Y - 10)
 
-                        -- Ajustar líneas para una silueta alrededor del personaje
-                        library.top.From = Vector2.new(minX, minY)
-                        library.top.To = Vector2.new(maxX, minY)
+                        library.bottom.From = Vector2.new(leftLegPos.X, leftLegPos.Y)
+                        library.bottom.To = Vector2.new(rightLegPos.X, rightLegPos.Y)
 
-                        library.bottom.From = Vector2.new(minX, maxY)
-                        library.bottom.To = Vector2.new(maxX, maxY)
+                        library.left.From = Vector2.new(leftLegPos.X, leftLegPos.Y)
+                        library.left.To = Vector2.new(headPos.X, headPos.Y)
 
-                        library.left.From = Vector2.new(minX, minY)
-                        library.left.To = Vector2.new(minX, maxY)
-
-                        library.right.From = Vector2.new(maxX, minY)
-                        library.right.To = Vector2.new(maxX, maxY)
+                        library.right.From = Vector2.new(rightLegPos.X, rightLegPos.Y)
+                        library.right.To = Vector2.new(torsoPos.X, torsoPos.Y - 10)
 
                         Visibility(true, library)
                     end
