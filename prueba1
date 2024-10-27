@@ -1,4 +1,42 @@
-local function Updater()
+local function UpdateColor(plr, healthRatio)
+    local color = Color3.fromRGB(255, 0, 0):Lerp(Color3.fromRGB(0, 255, 0), healthRatio)
+    for _, part in ipairs(plr.Character:GetChildren()) do
+        if part:IsA("BasePart") then
+            part.Color = color
+            part.Transparency = 0.5
+        end
+    end
+end
+
+local function AddContour(part)
+    local contour = part:FindFirstChild("Contour")
+    if not contour then
+        contour = Instance.new("SurfaceGui")
+        contour.Name = "Contour"
+        contour.AlwaysOnTop = true
+        contour.Parent = part
+        for _, face in ipairs(Enum.NormalId:GetEnumItems()) do
+            local border = Instance.new("Frame")
+            border.Size = UDim2.new(1, 0, 1, 0)
+            border.BackgroundTransparency = 0.5
+            border.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            border.Parent = contour
+        end
+    end
+end
+
+local function RemoveContour(plr)
+    for _, part in ipairs(plr.Character:GetChildren()) do
+        if part:IsA("BasePart") then
+            local contour = part:FindFirstChild("Contour")
+            if contour then
+                contour:Destroy()
+            end
+        end
+    end
+end
+
+local function Updater(plr)
     local connection
     connection = game:GetService("RunService").RenderStepped:Connect(function()
         if plr.Character and plr.Character:FindFirstChild("Humanoid") and plr.Character:FindFirstChild("HumanoidRootPart") then
@@ -6,23 +44,22 @@ local function Updater()
             local HumPos, OnScreen = camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
             if OnScreen then
                 local healthRatio = humanoid.Health / humanoid.MaxHealth
-
-                -- Solo actualizar el color de la barra de salud si está activa
                 if Settings.healthbar then
-                    UpdateColor(healthRatio)  -- Muestra la barra de salud si healthbar está activado
-                else
-                    Visibility(false, library) -- Oculta la barra de salud si healthbar está desactivado
+                    UpdateColor(plr, healthRatio)
                 end
-
-                -- Tu lógica adicional para la silueta del personaje
-                -- ...
-                
-                Visibility(true, library) -- Asegura que el contorno esté visible cuando esté en pantalla
+                for _, part in ipairs(plr.Character:GetChildren()) do
+                    if part:IsA("BasePart") then
+                        AddContour(part)
+                    end
+                end
+                Visibility(true, library)
             else
                 Visibility(false, library)
+                RemoveContour(plr)
             end
         else
             Visibility(false, library)
+            RemoveContour(plr)
             if not game.Players:FindFirstChild(plr.Name) then
                 connection:Disconnect()
             end
