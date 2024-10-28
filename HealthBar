@@ -16,7 +16,6 @@ local TeamColor = true
 
 local player = game:GetService("Players").LocalPlayer
 local camera = game:GetService("Workspace").CurrentCamera
-local mouse = player:GetMouse()
 
 local function NewQuad(thickness, color)
     local quad = Drawing.new("Quad")
@@ -44,69 +43,56 @@ local function NewLine(thickness, color)
 end
 
 local function Visibility(state, lib)
-    for u, x in pairs(lib) do
-        x.Visible = state
+    for _, item in pairs(lib) do
+        item.Visible = state
     end
 end
 
-local function ToColor3(col)
-    local r = col.r
-    local g = col.g
-    local b = col.b
-    return Color3.new(r, g, b)
-end
+local black = Color3.fromRGB(0, 0, 0)
 
-local black = Color3.fromRGB(0, 0 ,0)
 local function ESP(plr)
     local library = {
         blacktracer = NewLine(Settings.Tracer_Thickness*2, black),
         tracer = NewLine(Settings.Tracer_Thickness, Settings.Tracer_Color),
         black = NewQuad(Settings.Box_Thickness*2, black),
-        box = NewQuad(Settings.Box_Thickness, Settings.Box_Color),
-        healthbar = NewLine(3, black),
-        greenhealth = NewLine(1.5, black)
+        box = NewQuad(Settings.Box_Thickness, Settings.Box_Color)
     }
 
-    local function Updater()
+    local function UpdateESP()
         local connection
-        connection = game:GetService("RunService").RenderStepped:Connect(function()
-            if plr.Character ~= nil and plr.Character:FindFirstChild("Humanoid") ~= nil and plr.Character:FindFirstChild("HumanoidRootPart") ~= nil and plr.Character.Humanoid.Health > 0 and plr.Character:FindFirstChild("Head") ~= nil then
+        connection = game:GetService("RunService").Heartbeat:Connect(function()
+            if plr.Character and plr.Character:FindFirstChild("Humanoid") and plr.Character:FindFirstChild("HumanoidRootPart") and plr.Character.Humanoid.Health > 0 then
                 local HumPos, OnScreen = camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
+
                 if OnScreen then
-                    local head = camera:WorldToViewportPoint(plr.Character.Head.Position)
-                    local DistanceY = math.clamp((Vector2.new(head.X, head.Y) - Vector2.new(HumPos.X, HumPos.Y)).magnitude, 2, math.huge)
+                    local headPos = camera:WorldToViewportPoint(plr.Character.Head.Position)
+                    local DistanceY = math.clamp((Vector2.new(headPos.X, headPos.Y) - Vector2.new(HumPos.X, HumPos.Y)).magnitude, 2, math.huge)
 
-                    local function Size(item)
-                        item.PointA = Vector2.new(HumPos.X + DistanceY, HumPos.Y - DistanceY*2)
-                        item.PointB = Vector2.new(HumPos.X - DistanceY, HumPos.Y - DistanceY*2)
-                        item.PointC = Vector2.new(HumPos.X - DistanceY, HumPos.Y + DistanceY*2)
-                        item.PointD = Vector2.new(HumPos.X + DistanceY, HumPos.Y + DistanceY*2)
-                    end
-                    Size(library.box)
-                    Size(library.black)
+                    library.box.PointA = Vector2.new(HumPos.X + DistanceY, HumPos.Y - DistanceY*2)
+                    library.box.PointB = Vector2.new(HumPos.X - DistanceY, HumPos.Y - DistanceY*2)
+                    library.box.PointC = Vector2.new(HumPos.X - DistanceY, HumPos.Y + DistanceY*2)
+                    library.box.PointD = Vector2.new(HumPos.X + DistanceY, HumPos.Y + DistanceY*2)
 
-                    local green = Color3.fromRGB(0, 255, 0)
-                    local red = Color3.fromRGB(255, 0, 0)
                     local healthPercent = plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth
-
-                    library.box.Color = red:lerp(green, healthPercent)
+                    library.box.Color = Color3.fromRGB(255 * (1 - healthPercent), 255 * healthPercent, 0)
 
                     Visibility(true, library)
-                else 
+                else
                     Visibility(false, library)
                 end
-            else 
+            else
                 Visibility(false, library)
-                if game.Players:FindFirstChild(plr.Name) == nil then
+                if not game.Players:FindFirstChild(plr.Name) then
                     connection:Disconnect()
                 end
             end
         end)
     end
-    coroutine.wrap(Updater)()
+
+    coroutine.wrap(UpdateESP)()
 end
 
-for i, v in pairs(game:GetService("Players"):GetPlayers()) do
+for _, v in pairs(game:GetService("Players"):GetPlayers()) do
     if v.Name ~= player.Name then
         coroutine.wrap(ESP)(v)
     end
