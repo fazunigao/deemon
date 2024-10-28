@@ -21,10 +21,10 @@ local mouse = player:GetMouse()
 local function NewQuad(thickness, color)
     local quad = Drawing.new("Quad")
     quad.Visible = false
-    quad.PointA = Vector2.new(0,0)
-    quad.PointB = Vector2.new(0,0)
-    quad.PointC = Vector2.new(0,0)
-    quad.PointD = Vector2.new(0,0)
+    quad.PointA = Vector2.new(0, 0)
+    quad.PointB = Vector2.new(0, 0)
+    quad.PointC = Vector2.new(0, 0)
+    quad.PointD = Vector2.new(0, 0)
     quad.Color = color
     quad.Filled = false
     quad.Thickness = thickness
@@ -43,6 +43,17 @@ local function NewLine(thickness, color)
     return line
 end
 
+local function NewText(size, color)
+    local text = Drawing.new("Text")
+    text.Visible = false
+    text.Size = size
+    text.Color = color
+    text.Center = true
+    text.Outline = true
+    text.Transparency = 1
+    return text
+end
+
 local function Visibility(state, lib)
     for _, x in pairs(lib) do
         x.Visible = state
@@ -56,7 +67,8 @@ local function ESP(plr)
         black = NewQuad(Settings.Box_Thickness*2, Color3.new(0, 0, 0)),
         box = NewQuad(Settings.Box_Thickness, Settings.Box_Color),
         healthbar = NewLine(3, Color3.new(0, 0, 0)),
-        greenhealth = NewLine(1.5, Color3.fromRGB(0, 255, 0))
+        greenhealth = NewLine(1.5, Color3.fromRGB(0, 255, 0)),
+        weaponText = NewText(14, Color3.fromRGB(255, 255, 255))  -- Nuevo elemento de texto para mostrar el arma
     }
 
     local function Updater()
@@ -79,7 +91,18 @@ local function ESP(plr)
                     Size(library.box)
                     Size(library.black)
 
-                    Visibility(true, {library.box, library.tracer})
+                    -- Mostrar el arma que el jugador tiene en la mano
+                    local weaponName = "Sin Arma"
+                    for _, item in pairs(plr.Character:GetChildren()) do
+                        if item:IsA("Tool") then
+                            weaponName = item.Name
+                            break
+                        end
+                    end
+                    library.weaponText.Text = weaponName
+                    library.weaponText.Position = Vector2.new(HumPos.X, HumPos.Y + DistanceY*2 + 15)
+                    
+                    Visibility(true, {library.box, library.tracer, library.weaponText})
                 else
                     Visibility(false, library)
                 end
