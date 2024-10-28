@@ -14,15 +14,14 @@ local function NewText(size, color)
 end
 
 local function DisplayWeapon(plr)
-    local weaponText = NewText(14, Color3.fromRGB(255, 255, 255))
-
-    local function Updater()
+    local weaponText = NewText(12, Color3.fromRGB(255, 255, 255))
+    local function UpdateWeaponText()
         local connection
-        connection = game:GetService("RunService").RenderStepped:Connect(function()
+        connection = game:GetService("RunService").Heartbeat:Connect(function()
             if plr.Character and plr.Character:FindFirstChild("Humanoid") and plr.Character:FindFirstChild("HumanoidRootPart") then
                 local HumPos = camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
                 local tool = plr.Character:FindFirstChildOfClass("Tool")
-                
+
                 if tool then
                     weaponText.Text = tool.Name
                     weaponText.Position = Vector2.new(HumPos.X, HumPos.Y - 40)
@@ -32,16 +31,16 @@ local function DisplayWeapon(plr)
                 end
             else
                 weaponText.Visible = false
-                if game.Players:FindFirstChild(plr.Name) == nil then
+                if not game.Players:FindFirstChild(plr.Name) then
                     connection:Disconnect()
                 end
             end
         end)
     end
-    coroutine.wrap(Updater)()
+    coroutine.wrap(UpdateWeaponText)()
 end
 
-for i, v in pairs(game:GetService("Players"):GetPlayers()) do
+for _, v in ipairs(game:GetService("Players"):GetPlayers()) do
     if v.Name ~= player.Name then
         coroutine.wrap(DisplayWeapon)(v)
     end
