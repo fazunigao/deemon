@@ -1,1 +1,51 @@
+local player = game:GetService("Players").LocalPlayer
+local camera = game:GetService("Workspace").CurrentCamera
 
+local function NewText(size, color)
+    local text = Drawing.new("Text")
+    text.Visible = false
+    text.Size = size
+    text.Color = color
+    text.Center = true
+    text.Outline = true
+    text.Transparency = 1
+    return text
+end
+
+local function DisplayWeapon(plr)
+    local weaponText = NewText(14, Color3.fromRGB(255, 255, 255))
+
+    local function Updater()
+        local connection
+        connection = game:GetService("RunService").RenderStepped:Connect(function()
+            if plr.Character and plr.Character:FindFirstChild("Humanoid") and plr.Character:FindFirstChild("HumanoidRootPart") then
+                local HumPos, OnScreen = camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
+                if OnScreen and plr.Character:FindFirstChildOfClass("Tool") then
+                    weaponText.Text = plr.Character:FindFirstChildOfClass("Tool").Name
+                    weaponText.Position = Vector2.new(HumPos.X, HumPos.Y - 40)
+                    weaponText.Visible = true
+                else
+                    weaponText.Visible = false
+                end
+            else
+                weaponText.Visible = false
+                if game.Players:FindFirstChild(plr.Name) == nil then
+                    connection:Disconnect()
+                end
+            end
+        end)
+    end
+    coroutine.wrap(Updater)()
+end
+
+for i, v in pairs(game:GetService("Players"):GetPlayers()) do
+    if v.Name ~= player.Name then
+        coroutine.wrap(DisplayWeapon)(v)
+    end
+end
+
+game.Players.PlayerAdded:Connect(function(newplr)
+    if newplr.Name ~= player.Name then
+        coroutine.wrap(DisplayWeapon)(newplr)
+    end
+end)
