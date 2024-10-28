@@ -7,8 +7,9 @@ local function NewText(size, color)
     text.Size = size
     text.Color = color
     text.Center = true
-    text.Outline = true
-    text.Transparency = 1
+    text.Transparency = 0.5
+    text.Outline = false
+    text.Font = 1
     return text
 end
 
@@ -19,9 +20,11 @@ local function DisplayWeapon(plr)
         local connection
         connection = game:GetService("RunService").RenderStepped:Connect(function()
             if plr.Character and plr.Character:FindFirstChild("Humanoid") and plr.Character:FindFirstChild("HumanoidRootPart") then
-                local HumPos, OnScreen = camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
-                if OnScreen and plr.Character:FindFirstChildOfClass("Tool") then
-                    weaponText.Text = plr.Character:FindFirstChildOfClass("Tool").Name
+                local HumPos = camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
+                local tool = plr.Character:FindFirstChildOfClass("Tool")
+                
+                if tool then
+                    weaponText.Text = tool.Name
                     weaponText.Position = Vector2.new(HumPos.X, HumPos.Y - 40)
                     weaponText.Visible = true
                 else
